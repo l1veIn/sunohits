@@ -61,12 +61,26 @@ export async function GET() {
 
             if (contentType?.includes('application/json')) {
                 const searchData = JSON.parse(responseText)
+
+                // Extract sample result to debug structure
+                let sampleResult = null
+                if (searchData.data?.result) {
+                    // The result structure might be nested differently
+                    const videoResults = searchData.data.result.find((r: any) => r.result_type === 'video')
+                    if (videoResults?.data?.[0]) {
+                        sampleResult = videoResults.data[0]
+                    } else if (Array.isArray(searchData.data.result) && searchData.data.result[0]) {
+                        sampleResult = searchData.data.result[0]
+                    }
+                }
+
                 results.searchWithWbi = {
                     status: searchRes.status,
                     code: searchData.code,
                     message: searchData.message,
-                    hasResults: searchData.data?.result?.length > 0,
-                    resultCount: searchData.data?.result?.length || 0
+                    resultStructure: searchData.data?.result ? Object.keys(searchData.data.result).slice(0, 5) : null,
+                    sampleResultKeys: sampleResult ? Object.keys(sampleResult) : null,
+                    sampleBvid: sampleResult?.bvid || sampleResult?.arcurl || 'NOT_FOUND'
                 }
             } else {
                 results.searchWithWbi = {
