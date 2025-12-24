@@ -75,13 +75,34 @@ export class BiliClient {
       })
       if (!res.ok) throw new Error(`Search failed: ${res.status}`)
 
-      const json = (await res.json()) as SearchResponse
+      const json = await res.json()
       if (json.code !== 0) {
         // Sometimes code -412 is rate limit
         throw new Error(`Search API error: ${json.code} - ${json.message}`)
       }
 
-      return json.data.result || []
+      // The search API returns a mixed array of result types (video, user, etc)
+      // We need to find the video results specifically
+      // Structure: data.result = [{ result_type: 'video', data: [...videos] }, ...]
+      // OR direct array of videos in some cases
+      const results = json.data?.result || []
+
+      // If results is an array of video objects directly (has bvid)
+      if (results.length > 0 && results[0]?.bvid) {
+        return results
+      }
+
+      // If results is an array of result type objects
+      const videoSection = results.find((r: any) =>
+        r.result_type === 'video' || r.type === 'video'
+      )
+
+      if (videoSection?.data) {
+        return videoSection.data
+      }
+
+      // Fallback: filter for objects that have bvid
+      return results.filter((r: any) => r.bvid)
     } catch (error) {
       console.error(`Error searching for ${keyword} page ${page}:`, error)
       throw error
