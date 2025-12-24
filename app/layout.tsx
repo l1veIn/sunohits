@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
+import { Sidebar } from "@/components/layout/sidebar";
+import { PlayerBar } from "@/components/player/player-bar";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -9,8 +11,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "SunoHits - AI Music Charts",
+  description: "Discover trending Suno AI songs",
 };
 
 const geistSans = Geist({
@@ -26,14 +28,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${geistSans.className} antialiased overflow-hidden`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="flex h-screen w-full flex-col">
+            <div className="flex flex-1 overflow-hidden">
+              <Sidebar className="hidden md:block" />
+              <main className="flex-1 overflow-y-auto bg-background pb-20">
+                {children}
+              </main>
+            </div>
+            <PlayerBar />
+          </div>
         </ThemeProvider>
       </body>
     </html>

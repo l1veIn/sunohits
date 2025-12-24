@@ -98,6 +98,27 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
 
 > Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
 
+## Setup SunoHits (Dev)
+
+### Database Schema
+1. Go to Supabase SQL Editor.
+2. Run the content of `sql/001_init_schema.sql` to initialize `songs`, `daily_stats` and `daily_trending_songs`.
+3. Verify existence with `npm run ts-node scripts/verify-schema.ts` (requires `dotenv` and proper `.env.local`).
+4. Run `sql/002_crawl_metadata.sql` to initialize crawler logging table.
+
+### Testing
+Run unit tests (e.g. for WBI signing):
+```bash
+npm test
+```
+
+### Crawler Setup
+1. Set `CRON_SECRET` in `.env.local`.
+2. Trigger locally:
+   ```bash
+   curl -H "Authorization: Bearer <CRON_SECRET>" http://localhost:3000/api/crawl
+   ```
+
 ## Feedback and issues
 
 Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
