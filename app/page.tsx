@@ -3,6 +3,9 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { VirtualList } from "@/components/song-list/virtual-list";
 import { Song } from "@/lib/store/use-player-store";
 
+// Force dynamic rendering - this page fetches data at request time
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const supabase = await createClient();
   const { data: songsData, error } = await supabase

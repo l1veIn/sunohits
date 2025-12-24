@@ -83,7 +83,7 @@ export class CrawlerService {
     // 1. Upsert songs
     const { error: songError } = await this.supabase
       .from('songs')
-      .upsert(songs, { onConflict: 'bvid' })
+      .upsert(songs as any, { onConflict: 'bvid' })
 
     if (songError) throw new Error(`Song upsert failed: ${songError.message}`)
 
@@ -96,7 +96,7 @@ export class CrawlerService {
 
     const { error: statError } = await this.supabase
       .from('daily_stats')
-      .insert(stats)
+      .insert(stats as any)
 
     if (statError) throw new Error(`Stats insert failed: ${statError.message}`)
 
@@ -110,6 +110,6 @@ export class CrawlerService {
       status,
       processed_pages: processed,
       last_error_message: errorMsg
-    })
+    } as any)
   }
 }
