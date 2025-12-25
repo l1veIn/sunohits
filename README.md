@@ -32,37 +32,40 @@
 
 ## 🚀 一键部署
 
-### 部署到 Vercel + Supabase
+### 第一步：Fork 并部署到 Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fl1veIn%2Fsunohits&project-name=sunohits&repository-name=sunohits&demo-title=SunoHits&demo-description=AI%20Music%20Charts%20from%20Bilibili&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6)
 
-**部署步骤**：
-1. 点击上方按钮，登录 Vercel
-2. 创建或连接 Supabase 项目（Vercel 会自动引导）
-3. 等待部署完成
+1. 点击上方按钮，登录 Vercel（没有账号会引导注册）
+2. 在 **Add Integrations** 部分，点击 **Supabase** 旁边的 **Add** 按钮
+3. 如果没有 Supabase 账号，会引导你注册并创建项目
+4. 授权 Vercel 访问 Supabase 后，环境变量会自动配置
+5. 点击 **Deploy** 开始部署
 
-### 数据库初始化
+### 第二步：初始化数据库
 
-部署后，在 [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql) 运行：
+部署完成后，需要创建数据表：
 
-```sql
--- 复制 sql/setup.sql 的全部内容并执行
-```
+1. 打开 [Supabase Dashboard](https://supabase.com/dashboard)
+2. 选择刚创建的项目
+3. 进入 **SQL Editor**（左侧菜单）
+4. 复制 [`sql/setup.sql`](sql/setup.sql) 的全部内容
+5. 粘贴到编辑器并点击 **Run** 执行
 
-### 添加环境变量
+### 第三步：配置环境变量
 
 先生成一个随机密钥：
 ```bash
 openssl rand -base64 32
 ```
 
-**1. Vercel 项目设置** → Environment Variables：
+**在 Vercel 添加**：进入项目 → Settings → Environment Variables
 
 | 变量名 | 值 | 说明 |
 |--------|-----|------|
 | `CRON_SECRET` | 刚生成的密钥 | API 验证请求用 |
     
-**2. GitHub 仓库** → Settings → Secrets → Actions → Repository secrets：
+**在 GitHub 添加**：进入仓库 → Settings → Secrets → Actions → Repository secrets
 
 | Secret 名 | 值 |
 |-----------|-----|
@@ -71,11 +74,11 @@ openssl rand -base64 32
 
 > ⚠️ 两边的 `CRON_SECRET` 必须一致！GitHub Actions 用它调用 Vercel API。
 
-### 自动爬取
+### 第四步：触发首次爬取
 
-GitHub Actions 会每 6 小时自动触发爬虫（免费！）。
+GitHub Actions 会每 6 小时自动爬取数据（免费！）。
 
-也可以手动触发：GitHub → Actions → Crawl Charts → Run workflow
+首次需要手动触发：GitHub → Actions → Crawl Charts → Run workflow
 
 ---
 
