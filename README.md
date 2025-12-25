@@ -35,8 +35,8 @@ openssl rand -base64 32
 | 变量名 | 值 | 说明 |
 |--------|-----|------|
 | `CRON_SECRET` | 刚生成的密钥 | API 验证请求用 |
-
-**2. GitHub 仓库** → Settings → Secrets → Actions：
+    
+**2. GitHub 仓库** → Settings → Secrets → Actions → Repository secrets：
 
 | Secret 名 | 值 |
 |-----------|-----|
