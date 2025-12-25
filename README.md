@@ -5,32 +5,34 @@
 <h1 align="center">SunoHits</h1>
 
 <p align="center">
-  <strong>AI Music Charts from Bilibili</strong><br>
-  Discover trending Suno AI-generated songs
+  <strong>B站 Suno AI 音乐排行榜</strong><br>
+  发现热门 AI 生成音乐
 </p>
 
 <p align="center">
-  <a href="https://sunohits.vercel.app"><strong>🔗 Live Demo</strong></a> •
+  <a href="https://sunohits.vercel.app"><strong>🔗 在线演示</strong></a> •
   <a href="#-一键部署">一键部署</a> •
-  <a href="#-features">Features</a> •
-  <a href="#-tech-stack">Tech Stack</a> •
-  <a href="#-development">Development</a>
+  <a href="#-功能特性">功能特性</a> •
+  <a href="#-技术栈">技术栈</a> •
+  <a href="#-本地开发">本地开发</a>
 </p>
 
 ---
 
-## 📸 Screenshots
+## 📸 截图预览
 
 <p align="center">
-  <img src="image/web.jpg" alt="Desktop View" width="65%" />
-  <img src="image/mobile.jpg" alt="Mobile View" width="18%" />
+  <img src="image/web.jpg" alt="桌面端" width="65%" />
+  <img src="image/mobile.jpg" alt="移动端" width="18%" />
 </p>
+
+> ⚠️ **Demo 服务可能随时关闭**，建议自己部署以获得最佳体验。
 
 ---
 
 ## 🚀 一键部署
 
-### Deploy to Vercel + Supabase
+### 部署到 Vercel + Supabase
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fl1veIn%2Fsunohits&project-name=sunohits&repository-name=sunohits&demo-title=SunoHits&demo-description=AI%20Music%20Charts%20from%20Bilibili&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6)
 
@@ -77,9 +79,9 @@ GitHub Actions 会每 6 小时自动触发爬虫（免费！）。
 
 ---
 
-## ✨ Features
+## ✨ 功能特性
 
-### 📊 Multi-Chart System
+### 📊 多榜单系统
 - **总榜** - 半年内播放量最高 (Top 200)
 - **日榜** - 24小时内播放量最高
 - **周榜** - 一周内播放量最高
@@ -87,82 +89,82 @@ GitHub Actions 会每 6 小时自动触发爬虫（免费！）。
 - **弹幕榜** - 半年内弹幕数最多
 - **收藏榜** - 半年内收藏数最多
 
-### 🎧 Full-Featured Player
-- Play/Pause, Previous/Next controls
-- Progress bar with seek
-- Volume control & Play modes
-- Playlist drawer with queue
-- "Play All" button
-- "Clear Playlist" button
+### 🎧 完整播放器
+- 播放/暂停、上一首/下一首
+- 进度条拖拽
+- 音量控制、播放模式（顺序/随机/单曲/列表循环）
+- 播放列表抽屉
+- 「播放全部」按钮
+- 「清空列表」按钮
 
-### 💾 Local Storage Features
-- **Favorites** - 收藏喜欢的歌曲
-- **Block List** - 屏蔽非音乐内容
-- **Playlist Persistence** - 播放列表持久化
+### 💾 本地存储功能
+- **收藏夹** - 收藏喜欢的歌曲
+- **屏蔽列表** - 屏蔽非音乐内容
+- **播放列表持久化** - 刷新页面不丢失
 
-### 📱 Responsive Design
-- Desktop: Sidebar + Player bar
-- Mobile: Bottom tabs + Compact player
-
----
-
-## 🛠 Tech Stack
-
-- **Framework**: Next.js 15 (App Router)
-- **Database**: Supabase (PostgreSQL)
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State**: Zustand with localStorage
-- **Deployment**: Vercel
+### 📱 响应式设计
+- 桌面端：侧边栏 + 播放器栏
+- 移动端：底部标签 + 紧凑播放器
 
 ---
 
-## 📁 Project Structure
+## 🛠 技术栈
+
+- **框架**: Next.js 15 (App Router)
+- **数据库**: Supabase (PostgreSQL)
+- **样式**: Tailwind CSS + shadcn/ui
+- **状态管理**: Zustand + localStorage
+- **部署**: Vercel
+
+---
+
+## 📁 项目结构
 
 ```
 sunohits/
 ├── app/
 │   ├── api/
-│   │   ├── charts/       # Chart data API
-│   │   ├── crawl/        # Crawler trigger
-│   │   └── play/         # Audio stream proxy
-│   ├── favorites/        # Favorites page
-│   └── page.tsx          # Home page
+│   │   ├── charts/       # 榜单数据 API
+│   │   ├── crawl/        # 爬虫触发器
+│   │   └── play/         # 音频流代理
+│   ├── favorites/        # 收藏页面
+│   └── page.tsx          # 首页
 ├── components/
-│   ├── layout/           # Sidebar, MobileNav
-│   ├── player/           # PlayerBar, controls
-│   └── song-list/        # SongItem, VirtualList
+│   ├── layout/           # 侧边栏、移动端导航
+│   ├── player/           # 播放器组件
+│   └── song-list/        # 歌曲列表组件
 ├── lib/
-│   ├── bili/             # Bilibili client
-│   ├── services/         # CrawlerService
-│   └── store/            # Zustand stores
+│   ├── bili/             # B站客户端
+│   ├── services/         # 爬虫服务
+│   └── store/            # 状态管理
 └── sql/
-    └── setup.sql         # One-time DB setup
+    └── setup.sql         # 数据库初始化
 ```
 
 ---
 
-## 🧪 Development
+## 🧪 本地开发
 
 ```bash
-# Install
+# 安装依赖
 npm install
 
-# Run
+# 启动开发服务器
 npm run dev
 
-# Test
+# 运行测试
 npm test
 
-# Crawl manually
+# 手动爬取数据
 npx tsx scripts/run-crawl.ts
 ```
 
 ---
 
-## 📜 License
+## 📜 开源协议
 
 MIT
 
 ---
 
-<p align="center">Built with ❤️ for AI music lovers</p>
+<p align="center">为 AI 音乐爱好者用 ❤️ 打造</p>
