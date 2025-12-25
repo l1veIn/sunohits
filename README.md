@@ -25,20 +25,25 @@
 
 ### 添加环境变量
 
-**Vercel 项目设置** → Environment Variables：
+先生成一个随机密钥：
+```bash
+openssl rand -base64 32
+```
+
+**1. Vercel 项目设置** → Environment Variables：
 
 | 变量名 | 值 | 说明 |
 |--------|-----|------|
-| `CRON_SECRET` | 任意随机字符串 | 爬虫认证密钥 |
+| `CRON_SECRET` | 刚生成的密钥 | API 验证请求用 |
 
-> 💡 生成随机密钥：`openssl rand -base64 32`
-
-**GitHub 仓库** → Settings → Secrets → Actions：
+**2. GitHub 仓库** → Settings → Secrets → Actions：
 
 | Secret 名 | 值 |
 |-----------|-----|
-| `CRON_SECRET` | 与 Vercel 相同的密钥 |
-| `VERCEL_URL` | 你的 Vercel 域名（如 `https://sunohits.vercel.app`）|
+| `CRON_SECRET` | **与 Vercel 相同的密钥** |
+| `VERCEL_URL` | 你的部署地址（如 `https://sunohits.vercel.app`）|
+
+> ⚠️ 两边的 `CRON_SECRET` 必须一致！GitHub Actions 用它调用 Vercel API。
 
 ### 自动爬取
 
