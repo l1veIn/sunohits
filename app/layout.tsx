@@ -41,10 +41,11 @@ export default function RootLayout({
             <div className="flex flex-1 overflow-hidden">
               <Sidebar className="hidden md:block" />
               {/* Removed bg-background to reveal body texture */}
-              <main className="flex-1 overflow-y-auto pb-20">
+              <main className="flex-1 overflow-y-auto pb-36 md:pb-20">
                 {children}
               </main>
             </div>
+            <MobileNav />
             <PlayerBar />
           </div>
           <Toaster richColors position="bottom-center" />
