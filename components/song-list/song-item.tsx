@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Song, usePlayerStore } from '@/lib/store/use-player-store'
 import { useFavoritesStore } from '@/lib/store/use-favorites-store'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,6 +86,14 @@ export function SongItem({
       removeFavorite(song.bvid)
     } else {
       addFavorite(song)
+      toast('已收藏', {
+        description: '喜欢这首歌？去B站给 UP 主三连支持一下！',
+        action: {
+          label: '去B站',
+          onClick: () => window.open(`https://www.bilibili.com/video/${song.bvid}`, '_blank')
+        },
+        duration: 5000
+      })
     }
   }
 

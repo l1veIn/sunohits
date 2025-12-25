@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -46,6 +47,7 @@ export default function RootLayout({
             </div>
             <PlayerBar />
           </div>
+          <Toaster richColors position="bottom-center" />
         </ThemeProvider>
       </body>
     </html>
