@@ -4,6 +4,45 @@
 
 一个从B站爬取 Suno AI 音乐并提供播放、收藏、排行榜功能的 Web 应用。
 
+## 🚀 一键部署
+
+### Deploy to Vercel + Supabase
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fl1veIn%2Fsunohits&project-name=sunohits&repository-name=sunohits&demo-title=SunoHits&demo-description=AI%20Music%20Charts%20from%20Bilibili&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6)
+
+**部署步骤**：
+1. 点击上方按钮，登录 Vercel
+2. 创建或连接 Supabase 项目（Vercel 会自动引导）
+3. 等待部署完成
+
+### 数据库初始化
+
+部署后，在 [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql) 运行：
+
+```sql
+-- 复制 sql/setup.sql 的全部内容并执行
+```
+
+### 添加环境变量
+
+在 Vercel 项目设置 → Environment Variables 添加：
+
+| 变量名 | 值 | 说明 |
+|--------|-----|------|
+| `CRON_SECRET` | 任意随机字符串 | 爬虫认证密钥 |
+
+> 💡 生成随机密钥：`openssl rand -base64 32`
+
+### 触发首次爬取
+
+```bash
+curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://your-app.vercel.app/api/crawl
+```
+
+部署后 Cron Job 会每 6 小时自动爬取数据。
+
+---
+
 ## ✨ Features
 
 ### 📊 Multi-Chart System
@@ -16,91 +55,28 @@
 
 ### 🎧 Full-Featured Player
 - Play/Pause, Previous/Next controls
-- Progress bar with seek functionality
-- Volume control (desktop)
-- Play modes: Sequential, Shuffle, Repeat One, Repeat All
-- Playlist drawer with song queue
-- "Play All" - add entire chart to playlist
+- Progress bar with seek
+- Volume control & Play modes
+- Playlist drawer with queue
+- "Play All" button
 - "Clear Playlist" button
 
 ### 💾 Local Storage Features
-- **Favorites** - 收藏喜欢的歌曲，支持播放全部
-- **Block List** - 屏蔽非音乐内容（"这不是音乐！"按钮）
+- **Favorites** - 收藏喜欢的歌曲
+- **Block List** - 屏蔽非音乐内容
 - **Playlist Persistence** - 播放列表持久化
 
 ### 📱 Responsive Design
-- Desktop: Sidebar navigation + Player bar
-- Mobile: Bottom navigation tabs + Compact player
-- Marquee animation for long song titles
+- Desktop: Sidebar + Player bar
+- Mobile: Bottom tabs + Compact player
 
 ## 🛠 Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
 - **Database**: Supabase (PostgreSQL)
 - **Styling**: Tailwind CSS + shadcn/ui
-- **State**: Zustand with localStorage persistence
+- **State**: Zustand with localStorage
 - **Deployment**: Vercel
-
-## 🚀 Quick Start
-
-### 1. Clone & Install
-```bash
-git clone <repo-url>
-cd sunohits
-npm install
-```
-
-### 2. Environment Setup
-Create `.env.local`:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-key
-CRON_SECRET=your-cron-secret
-```
-
-### 3. Database Schema
-Run SQL migrations in Supabase SQL Editor:
-```bash
-sql/001_init_schema.sql      # songs, daily_stats, daily_trending_songs view
-sql/002_crawl_metadata.sql   # crawler logging
-sql/003_add_cid.sql          # add cid column for playback
-sql/004_add_view_stats.sql   # view statistics
-sql/005_multi_charts.sql     # charts, chart_songs tables
-```
-
-### 4. Run Development Server
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000)
-
-## 🕷 Crawler
-
-### Run Crawler (All Charts)
-```bash
-npx tsx scripts/run-crawl.ts
-```
-
-### Run via API (with auth)
-```bash
-# All charts
-curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/crawl
-
-# Specific chart
-curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/crawl?chart=daily"
-```
-
-### Vercel Cron Jobs
-Configure in `vercel.json`:
-```json
-{
-  "crons": [{
-    "path": "/api/crawl",
-    "schedule": "0 */6 * * *"
-  }]
-}
-```
 
 ## 📁 Project Structure
 
@@ -118,19 +94,28 @@ sunohits/
 │   ├── player/           # PlayerBar, controls
 │   └── song-list/        # SongItem, VirtualList
 ├── lib/
-│   ├── bili/             # Bilibili client (WBI signing)
+│   ├── bili/             # Bilibili client
 │   ├── services/         # CrawlerService
 │   └── store/            # Zustand stores
-├── sql/                  # Database migrations
-└── scripts/              # Utility scripts
+├── sql/
+│   └── setup.sql         # One-time DB setup
+└── vercel.json           # Cron job config
 ```
 
-## 🧪 Testing
+## 🧪 Development
 
 ```bash
-npm test           # Run all tests
-npm run lint       # ESLint check
-npx tsc --noEmit   # TypeScript check
+# Install
+npm install
+
+# Run
+npm run dev
+
+# Test
+npm test
+
+# Crawl manually
+npx tsx scripts/run-crawl.ts
 ```
 
 ## 📜 License

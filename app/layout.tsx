@@ -39,11 +39,11 @@ export default function RootLayout({
           <div className="flex h-screen w-full flex-col">
             <div className="flex flex-1 overflow-hidden">
               <Sidebar className="hidden md:block" />
-              <main className="flex-1 overflow-y-auto bg-background pb-36 md:pb-20">
+              {/* Removed bg-background to reveal body texture */}
+              <main className="flex-1 overflow-y-auto pb-20">
                 {children}
               </main>
             </div>
-            <MobileNav />
             <PlayerBar />
           </div>
         </ThemeProvider>

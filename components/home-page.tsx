@@ -53,7 +53,7 @@ export default function HomePage() {
 
     return (
         <div className="flex flex-col h-full">
-            <header className="px-4 sm:px-6 py-4 border-b sticky top-0 bg-background/95 backdrop-blur z-10 shrink-0 space-y-3">
+            <header className="px-4 sm:px-6 py-4 border-b sticky top-0 bg-background/60 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 z-10 shrink-0 space-y-3">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Suno Hits</h1>
