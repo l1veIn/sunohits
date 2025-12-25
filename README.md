@@ -1,8 +1,34 @@
-# 🎵 SunoHits
+<p align="center">
+  <img src="public/logo.png" alt="SunoHits Logo" width="120" />
+</p>
 
-> AI Music Charts from Bilibili - Discover trending Suno AI-generated songs
+<h1 align="center">SunoHits</h1>
 
-一个从B站爬取 Suno AI 音乐并提供播放、收藏、排行榜功能的 Web 应用。
+<p align="center">
+  <strong>AI Music Charts from Bilibili</strong><br>
+  Discover trending Suno AI-generated songs
+</p>
+
+<p align="center">
+  <a href="#-一键部署">一键部署</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-tech-stack">Tech Stack</a> •
+  <a href="#-development">Development</a>
+</p>
+
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="image/web.jpg" alt="Desktop View" width="70%" />
+</p>
+
+<p align="center">
+  <img src="image/mobile.jpg" alt="Mobile View" width="300" />
+</p>
+
+---
 
 ## 🚀 一键部署
 
@@ -80,6 +106,8 @@ GitHub Actions 会每 6 小时自动触发爬虫（免费！）。
 - Desktop: Sidebar + Player bar
 - Mobile: Bottom tabs + Compact player
 
+---
+
 ## 🛠 Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
@@ -87,6 +115,8 @@ GitHub Actions 会每 6 小时自动触发爬虫（免费！）。
 - **Styling**: Tailwind CSS + shadcn/ui
 - **State**: Zustand with localStorage
 - **Deployment**: Vercel
+
+---
 
 ## 📁 Project Structure
 
@@ -107,10 +137,11 @@ sunohits/
 │   ├── bili/             # Bilibili client
 │   ├── services/         # CrawlerService
 │   └── store/            # Zustand stores
-├── sql/
-│   └── setup.sql         # One-time DB setup
-└── vercel.json           # Cron job config
+└── sql/
+    └── setup.sql         # One-time DB setup
 ```
+
+---
 
 ## 🧪 Development
 
@@ -128,10 +159,12 @@ npm test
 npx tsx scripts/run-crawl.ts
 ```
 
+---
+
 ## 📜 License
 
 MIT
 
 ---
 
-Built with ❤️ for AI music lovers
+<p align="center">Built with ❤️ for AI music lovers</p>
