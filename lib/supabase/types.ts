@@ -12,6 +12,7 @@ export interface Database {
       songs: {
         Row: {
           bvid: string
+          cid: string | null
           title: string
           pic: string | null
           owner_name: string | null
@@ -20,6 +21,7 @@ export interface Database {
         }
         Insert: {
           bvid: string
+          cid?: string | null
           title: string
           pic?: string | null
           owner_name?: string | null
@@ -28,6 +30,7 @@ export interface Database {
         }
         Update: {
           bvid?: string
+          cid?: string | null
           title?: string
           pic?: string | null
           owner_name?: string | null
@@ -78,14 +81,66 @@ export interface Database {
           last_error_message?: string | null
         }
       }
+      charts: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          order_by: string
+          duration_filter: number
+          time_range: string
+          last_crawled_at: string | null
+        }
+        Insert: {
+          id: string
+          name: string
+          description?: string | null
+          order_by?: string
+          duration_filter?: number
+          time_range?: string
+          last_crawled_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          order_by?: string
+          duration_filter?: number
+          time_range?: string
+          last_crawled_at?: string | null
+        }
+      }
+      chart_songs: {
+        Row: {
+          chart_id: string
+          bvid: string
+          rank: number
+          crawled_at: string
+        }
+        Insert: {
+          chart_id: string
+          bvid: string
+          rank: number
+          crawled_at?: string
+        }
+        Update: {
+          chart_id?: string
+          bvid?: string
+          rank?: number
+          crawled_at?: string
+        }
+      }
     }
     Views: {
       daily_trending_songs: {
         Row: {
           bvid: string
+          cid: string | null
           title: string
           pic: string | null
           owner_name: string | null
+          pubdate: number | null
+          total_view: number | null
           trending_val: number | null
         }
       }

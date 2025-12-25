@@ -6,9 +6,10 @@ import { SongItem } from './song-item'
 
 interface VirtualListProps {
   songs: Song[]
+  onBlock?: (bvid: string) => void
 }
 
-export function VirtualList({ songs }: VirtualListProps) {
+export function VirtualList({ songs, onBlock }: VirtualListProps) {
   if (!songs.length) {
     return (
       <div className="text-center py-20 text-muted-foreground">
@@ -23,7 +24,7 @@ export function VirtualList({ songs }: VirtualListProps) {
       data={songs}
       itemContent={(index, song) => (
         <div className="pb-1">
-          <SongItem song={song} index={index} />
+          <SongItem song={song} index={index} onBlock={onBlock} />
         </div>
       )}
     />

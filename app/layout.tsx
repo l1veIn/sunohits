@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { PlayerBar } from "@/components/player/player-bar";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -38,10 +39,11 @@ export default function RootLayout({
           <div className="flex h-screen w-full flex-col">
             <div className="flex flex-1 overflow-hidden">
               <Sidebar className="hidden md:block" />
-              <main className="flex-1 overflow-y-auto bg-background pb-20">
+              <main className="flex-1 overflow-y-auto bg-background pb-36 md:pb-20">
                 {children}
               </main>
             </div>
+            <MobileNav />
             <PlayerBar />
           </div>
         </ThemeProvider>
@@ -49,3 +51,4 @@ export default function RootLayout({
     </html>
   );
 }
+

@@ -66,3 +66,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Marquee animation for long titles */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 10s linear infinite;
+  animation-play-state: paused;
+}
+
+/* Only animate if text is overflowing (parent has overflow-hidden) */
+.overflow-hidden:hover .animate-marquee,
+.animate-marquee:hover {
+  animation-play-state: running;
+}
+

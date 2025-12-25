@@ -45,7 +45,19 @@ export class BiliClient {
     }
   }
 
-  async search(keyword: string, page: number = 1): Promise<SearchResponse['data']['result']> {
+  /**
+   * Search for videos on Bilibili
+   * @param keyword Search keyword
+   * @param page Page number (default: 1)
+   * @param order Sort order: 'click' (plays), 'pubdate' (newest), 'dm' (danmaku), 'stow' (favorites)
+   * @param duration Duration filter: 0 (all), 1 (<10min), 2 (10-30min), 3 (30-60min), 4 (>60min)
+   */
+  async search(
+    keyword: string,
+    page: number = 1,
+    order: 'click' | 'pubdate' | 'dm' | 'stow' = 'click',
+    duration: 0 | 1 | 2 | 3 | 4 = 1
+  ): Promise<SearchResponse['data']['result']> {
     if (!this.imgKey || !this.subKey) {
       await this.getNav()
     }
@@ -54,11 +66,16 @@ export class BiliClient {
       throw new Error('WBI keys not initialized')
     }
 
-    const params = {
+    const params: Record<string, string | number> = {
       keyword,
       search_type: 'video',
       page,
-      order: 'click', // popularity
+      order,
+    }
+
+    // Only add duration filter if not 0 (all)
+    if (duration > 0) {
+      params.duration = duration
     }
 
     const query = encWbi(params, this.imgKey, this.subKey)
@@ -105,6 +122,35 @@ export class BiliClient {
       return results.filter((r: any) => r.bvid)
     } catch (error) {
       console.error(`Error searching for ${keyword} page ${page}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * Get video CID from BVID by calling View API
+   */
+  async getVideoCid(bvid: string): Promise<string> {
+    const url = `https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://www.bilibili.com'
+        }
+      })
+      if (!res.ok) throw new Error(`View API failed: ${res.status}`)
+
+      const json = await res.json()
+      if (json.code !== 0) throw new Error(`View API error: ${json.code} - ${json.message}`)
+
+      // Return first page's cid (most videos have single page)
+      const cid = json.data?.cid || json.data?.pages?.[0]?.cid
+      if (!cid) throw new Error('No CID found in video info')
+
+      return String(cid)
+    } catch (error) {
+      console.error(`Error fetching CID for ${bvid}:`, error)
       throw error
     }
   }

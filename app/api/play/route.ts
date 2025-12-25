@@ -4,15 +4,21 @@ import { BiliClient } from '@/lib/bili/client'
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const bvid = searchParams.get('bvid')
-  const cid = searchParams.get('cid')
+  let cid = searchParams.get('cid')
 
-  if (!bvid || !cid) {
-    return NextResponse.json({ error: 'Missing bvid or cid' }, { status: 400 })
+  if (!bvid) {
+    return NextResponse.json({ error: 'Missing bvid' }, { status: 400 })
   }
 
   try {
     const client = BiliClient.getInstance()
-    // 1. Resolve Stream URL
+
+    // 1. Auto-resolve CID if not provided
+    if (!cid) {
+      cid = await client.getVideoCid(bvid)
+    }
+
+    // 2. Resolve Stream URL
     const playUrl = await client.getPlayUrl(bvid, cid)
 
     // 2. Prepare headers for upstream
@@ -30,21 +36,21 @@ export async function GET(req: NextRequest) {
     const upstreamRes = await fetch(playUrl, { headers })
 
     if (!upstreamRes.ok) {
-       console.error(`Upstream error: ${upstreamRes.status} ${upstreamRes.statusText}`)
-       return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
+      console.error(`Upstream error: ${upstreamRes.status} ${upstreamRes.statusText}`)
+      return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
     }
 
     // 4. Stream response
     const responseHeaders = new Headers()
     const contentType = upstreamRes.headers.get('Content-Type')
     if (contentType) responseHeaders.set('Content-Type', contentType)
-    
+
     const contentLength = upstreamRes.headers.get('Content-Length')
     if (contentLength) responseHeaders.set('Content-Length', contentLength)
-    
+
     const contentRange = upstreamRes.headers.get('Content-Range')
     if (contentRange) responseHeaders.set('Content-Range', contentRange)
-    
+
     responseHeaders.set('Accept-Ranges', 'bytes')
 
     return new NextResponse(upstreamRes.body, {

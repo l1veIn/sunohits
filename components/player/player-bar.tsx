@@ -1,13 +1,48 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { Play, Pause, SkipBack, SkipForward, ListMusic } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Play, Pause, SkipBack, SkipForward, ListMusic, Music, Repeat, Repeat1, Shuffle, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { usePlayerStore } from '@/lib/store/use-player-store'
+import { usePlayerStore, PlayMode } from '@/lib/store/use-player-store'
 import { ProgressSlider } from './progress-slider'
 import { VolumeControl } from './volume-control'
 import { useMediaSession } from '@/lib/hooks/use-media-session'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { SongItem } from '@/components/song-list/song-item'
 import { cn } from '@/lib/utils'
+
+// Strip HTML tags and decode entities
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+}
+
+// Play mode icon mapping
+function PlayModeIcon({ mode }: { mode: PlayMode }) {
+  switch (mode) {
+    case 'shuffle':
+      return <Shuffle className="h-4 w-4" />
+    case 'repeat-one':
+      return <Repeat1 className="h-4 w-4" />
+    case 'repeat-all':
+      return <Repeat className="h-4 w-4" />
+    case 'sequential':
+    default:
+      return <ArrowRight className="h-4 w-4" />
+  }
+}
+
+const PLAY_MODE_LABELS: Record<PlayMode, string> = {
+  'sequential': 'Sequential',
+  'shuffle': 'Shuffle',
+  'repeat-one': 'Repeat One',
+  'repeat-all': 'Repeat All',
+}
 
 export function PlayerBar() {
   const {
@@ -16,6 +51,9 @@ export function PlayerBar() {
     volume,
     progress,
     duration,
+    playlist,
+    currentIndex,
+    playMode,
     play,
     pause,
     next,
@@ -23,76 +61,47 @@ export function PlayerBar() {
     seek,
     setVolume,
     setProgress,
-    setDuration
+    setDuration,
+    togglePlayMode,
+    removeFromPlaylist,
+    clearPlaylist
   } = usePlayerStore()
 
   const audioRef = useRef<HTMLAudioElement>(null)
+  const [mounted, setMounted] = useState(false)
+
+  // Handle hydration mismatch - wait for client mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Media Session Integration
   useMediaSession({
     song: currentSong,
     isPlaying,
-    play: () => play(), // Wrapper because action handler signature might differ or just safe keeping
+    play: () => play(),
     pause,
     next,
     prev,
     seek
   })
 
-  // Audio Logic (Task T011 partially here, easier to keep together)
+  // Audio source updates when song changes
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio) return
+    if (!audio || !currentSong) return
 
-    if (currentSong) {
-      // If source changed or not set
-      const streamUrl = `/api/play?bvid=${currentSong.bvid}&cid=123456` // CID hardcoded or need to fetch?
-      // Wait, spec says proxy takes bvid and cid. We stored bvid in song, but cid is missing in Song entity?
-      // Actually Bilibili videos might have multiple pages (cids).
-      // For Suno songs, usually single part.
-      // We might need to fetch CID if not present.
-      // Or maybe our DB view doesn't have CID.
-      // Let's assume for MVP we fetch CID or just try a default if we can't get it.
-      // Actually, BiliClient.getPlayUrl takes bvid and cid.
-      // If we don't have CID, we can't play.
-      // We should probably fetch video details to get CID if not in DB.
-      // But for now, let's look at Song definition. It matches DB schema: bvid, title, pic, owner_name.
-      // We might need to fetch CID on the fly.
-      // Let's temporarily assume we might need a way to get CID.
-      // However, for this task, let's construct the URL.
-      
-      // FIX: We need CID. Since we don't have it in Song, we might need to fetch it.
-      // Or maybe we can update the proxy to resolve CID from BVID if missing?
-      // Bilibili API `x/web-interface/view?bvid=...` gives CID.
-      // Let's assume the proxy is smart enough or we update the client later.
-      // For now, let's put a placeholder CID or update the logic to fetch it.
-      // Actually, checking `BiliClient.getPlayUrl` implementation... it takes CID.
-      // Let's update `usePlayerStore` to handle async play or fetch CID in the component.
-      
-      // TEMPORARY FIX: We'll assume the crawler might have populated it or we fetch it.
-      // But wait, the crawler just upserted bvid, title, pic, etc. No CID in DB.
-      // We need to fetch CID.
-      // Let's add a quick client-side fetch for CID if needed or just update the proxy to handle it?
-      // Updating proxy is safer/cleaner. But proxy takes CID.
-      // Let's make the audio src a special internal API that resolves CID? 
-      // Or just fetch it here.
-      
-      // Let's use a dummy CID for now and see if we can resolve it later, or maybe update `Song` interface?
-      // Actually, let's try to update the proxy to optional CID later.
-      // For now, pass a dummy '0' and maybe the proxy can handle looking it up?
-      // Or better: The crawler SHOULD have stored CID.
-      // But schema.sql doesn't have it.
-      // Okay, let's fetch it on the fly in `useEffect`.
-      
-      // REALITY CHECK: If I can't change DB schema easily now, I will fetch CID via a new API route or just Client Side?
-      // Bilibili View API is public (wbi needed?). `x/web-interface/view` doesn't need wbi usually for basic info.
-      // Let's try to fetch it client side for now.
-      
-      // Actually, to unblock, I'll pass a dummy CID and note this as a todo.
-      // But wait, audio won't play without valid CID.
-      // Let's add a helper to fetch CID.
+    const streamUrl = currentSong.cid
+      ? `/api/play?bvid=${currentSong.bvid}&cid=${currentSong.cid}`
+      : `/api/play?bvid=${currentSong.bvid}`
+
+    if (!audio.src.endsWith(streamUrl.split('?')[1] || '')) {
+      audio.src = streamUrl
+      if (isPlaying) {
+        audio.play().catch(e => console.error('Auto-play failed', e))
+      }
     }
-  }, [currentSong])
+  }, [currentSong, isPlaying])
 
   // Volume effect
   useEffect(() => {
@@ -103,14 +112,14 @@ export function PlayerBar() {
 
   // Play/Pause effect
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && currentSong) {
       if (isPlaying) {
-        audioRef.current.play().catch(e => console.error("Play failed", e))
+        audioRef.current.play().catch(e => console.error('Play failed', e))
       } else {
         audioRef.current.pause()
       }
     }
-  }, [isPlaying])
+  }, [isPlaying, currentSong])
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
@@ -128,78 +137,214 @@ export function PlayerBar() {
     next()
   }
 
-  if (!currentSong) return null
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="h-20 border-t bg-background/95 backdrop-blur fixed bottom-0 left-0 right-0 flex items-center justify-center px-4 z-50">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Music className="h-5 w-5" />
+          <span className="font-medium">SunoHits</span>
+        </div>
+      </div>
+    )
+  }
 
-  // Temporary CID fetcher logic placeholder
-  // Ideally we create a /api/resolve-cid endpoint or similar.
-  // For now, let's assume we can get it or proxy handles it.
-  // Wait, I implemented /api/play and it REQUIRES cid.
-  // I must fix this gap.
-  // I will add a `cid` field to `Song` interface in store, and fetch it when selecting a song?
-  // Or fetch it right here.
-  
   return (
-    <div className="h-20 border-t bg-background/95 backdrop-blur fixed bottom-0 left-0 right-0 flex items-center justify-between px-4 z-50">
+    <div className="h-auto sm:h-20 border-t bg-background/95 backdrop-blur fixed bottom-0 left-0 right-0 flex flex-col sm:flex-row items-center sm:justify-between px-3 sm:px-4 py-2 sm:py-0 gap-2 sm:gap-0 z-50">
       {/* Hidden Audio Element */}
       <audio
         ref={audioRef}
-        // We need a real CID. Let's use a placeholder and rely on a future fix or proxy enhancement.
-        // Actually, without CID, it fails.
-        // Let's assume for now we might have it. 
-        // I will update the src dynamically.
-        src={currentSong ? `/api/play?bvid=${currentSong.bvid}&cid=FIXME` : undefined}
         onTimeUpdate={handleTimeUpdate}
         onDurationChange={handleDurationChange}
         onEnded={handleEnded}
       />
 
-      {/* Track Info */}
-      <div className="flex items-center gap-3 w-1/3 min-w-0">
-        <div className="relative h-12 w-12 rounded bg-secondary overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={currentSong.pic} 
-            alt={currentSong.title} 
-            className="object-cover w-full h-full" 
-            referrerPolicy="no-referrer"
-          />
-        </div>
-        <div className="min-w-0">
-          <div className="font-medium truncate">{currentSong.title}</div>
-          <div className="text-xs text-muted-foreground truncate">{currentSong.owner_name}</div>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-col items-center gap-1 w-1/3">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={prev}>
-            <SkipBack className="h-5 w-5" />
-          </Button>
-          <Button size="icon" className="h-10 w-10 rounded-full" onClick={isPlaying ? pause : () => play()}>
-            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={next}>
-            <SkipForward className="h-5 w-5" />
-          </Button>
-        </div>
-        <ProgressSlider 
-          current={progress} 
-          duration={duration} 
+      {/* Mobile: Full width progress bar at top */}
+      <div className="w-full sm:hidden">
+        <ProgressSlider
+          current={progress}
+          duration={duration}
           onSeek={(val) => {
             if (audioRef.current) audioRef.current.currentTime = val
             seek(val)
-          }} 
+          }}
         />
       </div>
 
-      {/* Volume & Options */}
-      <div className="flex items-center justify-end gap-2 w-1/3">
-        <VolumeControl volume={volume} onVolumeChange={setVolume} />
-        <Button variant="ghost" size="icon">
-          <ListMusic className="h-5 w-5" />
+      {/* Track Info + Controls Row */}
+      <div className="flex items-center justify-between w-full sm:w-auto sm:flex-1 gap-2">
+        {/* Track Info - shrinks to give priority to center controls */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:shrink sm:flex-initial">
+          {currentSong ? (
+            <>
+              <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded bg-secondary overflow-hidden shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={currentSong.pic}
+                  alt={currentSong.title}
+                  className="object-cover w-full h-full"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="min-w-0 shrink overflow-hidden">
+                <div className="font-medium text-sm sm:text-base whitespace-nowrap overflow-hidden">
+                  <span className="inline-block animate-marquee hover:animate-none">
+                    {stripHtml(currentSong.title)}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground truncate">{currentSong.owner_name}</div>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Music className="h-5 w-5" />
+              <span className="font-medium text-sm sm:text-base">SunoHits</span>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile: Compact Controls */}
+        <div className="flex sm:hidden items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={prev} disabled={!currentSong}>
+            <SkipBack className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            onClick={isPlaying ? pause : () => play()}
+            disabled={!currentSong}
+          >
+            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={next} disabled={!currentSong}>
+            <SkipForward className="h-4 w-4" />
+          </Button>
+          {/* Playlist button on mobile */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 relative">
+                <ListMusic className="h-4 w-4" />
+                {playlist.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                    {playlist.length}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80">
+              <SheetHeader>
+                <SheetTitle>播放列表 ({playlist.length})</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-1 max-h-[calc(100vh-120px)] overflow-y-auto">
+                {playlist.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    暂无歌曲
+                  </div>
+                ) : (
+                  playlist.map((song) => (
+                    <SongItem
+                      key={song.bvid}
+                      song={song}
+                      compact
+                      showIndex={false}
+                      onRemove={() => removeFromPlaylist(song.bvid)}
+                    />
+                  ))
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+
+      {/* Desktop: Center Controls with Progress */}
+      <div className="hidden sm:flex flex-col items-center gap-1 w-1/3">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={prev} disabled={!currentSong}>
+            <SkipBack className="h-5 w-5" />
+          </Button>
+          <Button
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            onClick={isPlaying ? pause : () => play()}
+            disabled={!currentSong}
+          >
+            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={next} disabled={!currentSong}>
+            <SkipForward className="h-5 w-5" />
+          </Button>
+        </div>
+        <ProgressSlider
+          current={progress}
+          duration={duration}
+          onSeek={(val) => {
+            if (audioRef.current) audioRef.current.currentTime = val
+            seek(val)
+          }}
+        />
+      </div>
+
+      {/* Desktop: Right Controls */}
+      <div className="hidden sm:flex items-center justify-end gap-2 w-1/3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={togglePlayMode}
+          title={PLAY_MODE_LABELS[playMode]}
+        >
+          <PlayModeIcon mode={playMode} />
         </Button>
+        <VolumeControl volume={volume} onVolumeChange={setVolume} />
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative">
+              <ListMusic className="h-5 w-5" />
+              {playlist.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {playlist.length}
+                </span>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80">
+            <SheetHeader>
+              <div className="flex items-center justify-between">
+                <SheetTitle>播放列表 ({playlist.length})</SheetTitle>
+                {playlist.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearPlaylist}
+                    className="text-muted-foreground hover:text-destructive mr-8"
+                  >
+                    清空
+                  </Button>
+                )}
+              </div>
+            </SheetHeader>
+            <div className="mt-4 space-y-1 max-h-[calc(100vh-120px)] overflow-y-auto">
+              {playlist.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  暂无歌曲
+                </div>
+              ) : (
+                playlist.map((song) => (
+                  <SongItem
+                    key={song.bvid}
+                    song={song}
+                    compact
+                    showIndex={false}
+                    onRemove={() => removeFromPlaylist(song.bvid)}
+                  />
+                ))
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   )
 }
+

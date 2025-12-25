@@ -8,22 +8,19 @@ import { CrawlerService } from '../lib/services/crawler'
 
 async function main() {
     console.log('🕷️ Starting SUNO AI music crawler...')
-    console.log('📝 This will crawl 50 pages of SUNO V5 videos from Bilibili')
+    console.log('📝 This will crawl all charts from Bilibili')
     console.log('')
 
     const crawler = new CrawlerService()
 
     try {
-        const result = await crawler.crawl()
+        const results = await crawler.crawlAll()
 
-        if (result.success) {
-            console.log('')
-            console.log('✅ Crawl completed successfully!')
-            console.log(`📊 Pages crawled: ${result.processed}`)
-            console.log(`🎵 Songs upserted: ${result.upserted}`)
-        } else {
-            console.error('')
-            console.error('❌ Crawl failed:', result.error)
+        console.log('')
+        console.log('✅ Crawl completed!')
+        console.log('📊 Results:')
+        for (const [chartId, result] of Object.entries(results)) {
+            console.log(`   ${chartId}: ${result.success ? '✓' : '✗'} (${result.count} songs)`)
         }
     } catch (error: any) {
         console.error('❌ Error running crawler:', error.message)
@@ -32,3 +29,4 @@ async function main() {
 }
 
 main()
+

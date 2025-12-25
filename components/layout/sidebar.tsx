@@ -2,13 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, ListMusic, Heart, Music } from 'lucide-react'
+import { Home, Heart, Music } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 const NAV_ITEMS = [
   { href: '/', label: '发现', icon: Home },
-  { href: '/charts', label: '榜单', icon: ListMusic }, // Mapping charts to separate route or just filtering? Spec says "Discovery" and "Charts". Let's assume separate or query param. For now separate route /charts which might re-use page logic.
   { href: '/favorites', label: '收藏', icon: Heart },
 ]
 
