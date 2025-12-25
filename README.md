@@ -161,10 +161,20 @@ npx tsx scripts/run-crawl.ts
 
 ---
 
-## 📜 开源协议
+## � 致谢
+
+本项目参考了以下优秀开源项目：
+
+- [wood3n/biu](https://github.com/wood3n/biu) - B站音乐播放器
+- [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect) - B站 API 文档
+
+---
+
+## �📜 开源协议
 
 MIT
 
 ---
 
 <p align="center">为 AI 音乐爱好者用 ❤️ 打造</p>
+
