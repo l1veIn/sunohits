@@ -25,7 +25,7 @@
 
 ### 添加环境变量
 
-在 Vercel 项目设置 → Environment Variables 添加：
+**Vercel 项目设置** → Environment Variables：
 
 | 变量名 | 值 | 说明 |
 |--------|-----|------|
@@ -33,13 +33,18 @@
 
 > 💡 生成随机密钥：`openssl rand -base64 32`
 
-### 触发首次爬取
+**GitHub 仓库** → Settings → Secrets → Actions：
 
-```bash
-curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://your-app.vercel.app/api/crawl
-```
+| Secret 名 | 值 |
+|-----------|-----|
+| `CRON_SECRET` | 与 Vercel 相同的密钥 |
+| `VERCEL_URL` | 你的 Vercel 域名（如 `https://sunohits.vercel.app`）|
 
-部署后 Cron Job 会每 6 小时自动爬取数据。
+### 自动爬取
+
+GitHub Actions 会每 6 小时自动触发爬虫（免费！）。
+
+也可以手动触发：GitHub → Actions → Crawl Charts → Run workflow
 
 ---
 
