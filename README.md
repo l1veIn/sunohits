@@ -21,11 +21,8 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="image/web.jpg" alt="Desktop View" width="70%" />
-</p>
-
-<p align="center">
-  <img src="image/mobile.jpg" alt="Mobile View" width="300" />
+  <img src="image/web.jpg" alt="Desktop View" width="65%" />
+  <img src="image/mobile.jpg" alt="Mobile View" width="18%" />
 </p>
 
 ---
