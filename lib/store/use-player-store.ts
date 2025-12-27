@@ -26,6 +26,9 @@ interface PlayerState {
   currentIndex: number
   playMode: PlayMode
   isSidebarOpen: boolean
+  // Shuffle state: shuffled order of indices
+  shuffleOrder: number[]
+  shufflePosition: number  // Current position in shuffleOrder
 
   // Actions
   play: (song?: Song) => void
@@ -49,6 +52,24 @@ interface PlayerState {
 
 const PLAY_MODES: PlayMode[] = ['sequential', 'shuffle', 'repeat-one', 'repeat-all']
 
+// Fisher-Yates shuffle algorithm
+function shuffleArray(length: number, startIndex?: number): number[] {
+  const arr = Array.from({ length }, (_, i) => i)
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  // If startIndex is provided, move it to the front so current song plays first
+  if (startIndex !== undefined && startIndex >= 0 && startIndex < length) {
+    const idx = arr.indexOf(startIndex)
+    if (idx > 0) {
+      arr.splice(idx, 1)
+      arr.unshift(startIndex)
+    }
+  }
+  return arr
+}
+
 export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
@@ -62,6 +83,8 @@ export const usePlayerStore = create<PlayerState>()(
       currentIndex: -1,
       playMode: 'sequential',
       isSidebarOpen: false,
+      shuffleOrder: [],
+      shufflePosition: 0,
 
       // Actions
       play: (song) => {
@@ -100,10 +123,11 @@ export const usePlayerStore = create<PlayerState>()(
       pause: () => set({ isPlaying: false }),
 
       next: () => {
-        const { playlist, currentIndex, playMode } = get()
+        const { playlist, currentIndex, playMode, shuffleOrder, shufflePosition } = get()
         if (playlist.length === 0) return
 
         let nextIndex: number
+        let newShufflePosition = shufflePosition
 
         switch (playMode) {
           case 'repeat-one':
@@ -111,15 +135,33 @@ export const usePlayerStore = create<PlayerState>()(
             nextIndex = currentIndex
             break
           case 'shuffle':
-            // Random song (not the same one if possible)
-            if (playlist.length === 1) {
-              nextIndex = 0
+            // Use shuffled order
+            if (shuffleOrder.length !== playlist.length) {
+              // Regenerate shuffle order if it's out of sync
+              const newOrder = shuffleArray(playlist.length, currentIndex)
+              set({ shuffleOrder: newOrder, shufflePosition: 0 })
+              nextIndex = newOrder[0]
+              newShufflePosition = 0
             } else {
-              do {
-                nextIndex = Math.floor(Math.random() * playlist.length)
-              } while (nextIndex === currentIndex)
+              // Move to next position in shuffle order
+              newShufflePosition = shufflePosition + 1
+              if (newShufflePosition >= shuffleOrder.length) {
+                // End of shuffled list - reshuffle and start over
+                const newOrder = shuffleArray(playlist.length)
+                set({ shuffleOrder: newOrder, shufflePosition: 0 })
+                nextIndex = newOrder[0]
+                newShufflePosition = 0
+              } else {
+                nextIndex = shuffleOrder[newShufflePosition]
+              }
             }
-            break
+            set({
+              currentSong: playlist[nextIndex],
+              currentIndex: nextIndex,
+              shufflePosition: newShufflePosition,
+              isPlaying: true
+            })
+            return
           case 'repeat-all':
             // Loop to start when at end
             nextIndex = (currentIndex + 1) % playlist.length
@@ -142,24 +184,32 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       prev: () => {
-        const { playlist, currentIndex, playMode } = get()
+        const { playlist, currentIndex, playMode, shuffleOrder, shufflePosition } = get()
         if (playlist.length === 0) return
 
         let prevIndex: number
+        let newShufflePosition = shufflePosition
 
         switch (playMode) {
           case 'repeat-one':
             prevIndex = currentIndex
             break
           case 'shuffle':
-            if (playlist.length === 1) {
-              prevIndex = 0
+            // Go back in shuffle order
+            if (shuffleOrder.length !== playlist.length || shufflePosition <= 0) {
+              // Can't go back if at start or shuffle order is invalid
+              prevIndex = currentIndex
             } else {
-              do {
-                prevIndex = Math.floor(Math.random() * playlist.length)
-              } while (prevIndex === currentIndex)
+              newShufflePosition = shufflePosition - 1
+              prevIndex = shuffleOrder[newShufflePosition]
             }
-            break
+            set({
+              currentSong: playlist[prevIndex],
+              currentIndex: prevIndex,
+              shufflePosition: newShufflePosition,
+              isPlaying: true
+            })
+            return
           case 'repeat-all':
             prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1
             break
@@ -267,10 +317,17 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       togglePlayMode: () => {
-        const { playMode } = get()
-        const currentIdx = PLAY_MODES.indexOf(playMode)
-        const nextIdx = (currentIdx + 1) % PLAY_MODES.length
-        set({ playMode: PLAY_MODES[nextIdx] })
+        const { playMode, playlist, currentIndex } = get()
+        const currentModeIdx = PLAY_MODES.indexOf(playMode)
+        const nextMode = PLAY_MODES[(currentModeIdx + 1) % PLAY_MODES.length]
+
+        // When switching to shuffle, generate a new shuffle order
+        if (nextMode === 'shuffle' && playlist.length > 0) {
+          const newOrder = shuffleArray(playlist.length, currentIndex)
+          set({ playMode: nextMode, shuffleOrder: newOrder, shufflePosition: 0 })
+        } else {
+          set({ playMode: nextMode })
+        }
       },
 
       setPlayMode: (mode) => set({ playMode: mode }),

@@ -38,3 +38,17 @@ export interface PlayUrlResponse {
     }
   }
 }
+
+export interface UserSearchResult {
+  mid: number
+  uname: string
+  usign: string
+  fans: number
+  videos: number
+  upic: string
+  level: number
+  official_verify: {
+    type: number
+    desc: string
+  }
+}

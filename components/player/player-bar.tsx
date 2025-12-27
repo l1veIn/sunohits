@@ -205,6 +205,16 @@ export function PlayerBar() {
 
         {/* Mobile: Compact Controls */}
         <div className="flex sm:hidden items-center gap-1">
+          {/* Play mode toggle - separate from danger zone */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            onClick={togglePlayMode}
+            title={PLAY_MODE_LABELS[playMode]}
+          >
+            <PlayModeIcon mode={playMode} />
+          </Button>
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={prev} disabled={!currentSong}>
             <SkipBack className="h-4 w-4" />
           </Button>
@@ -233,7 +243,19 @@ export function PlayerBar() {
             </SheetTrigger>
             <SheetContent side="right" className="w-80">
               <SheetHeader>
-                <SheetTitle>播放列表 ({playlist.length})</SheetTitle>
+                <div className="flex items-center justify-between">
+                  <SheetTitle>播放列表 ({playlist.length})</SheetTitle>
+                  {playlist.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearPlaylist}
+                      className="text-muted-foreground hover:text-destructive mr-6"
+                    >
+                      清空
+                    </Button>
+                  )}
+                </div>
               </SheetHeader>
               <div className="mt-4 space-y-1 max-h-[calc(100vh-120px)] overflow-y-auto">
                 {playlist.length === 0 ? (

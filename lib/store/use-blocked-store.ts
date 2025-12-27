@@ -1,56 +1,58 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage, StateStorage } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface BlockedStore {
-    blockedBvids: Set<string>
+    blockedBvids: string[]
     isBlocked: (bvid: string) => boolean
     block: (bvid: string) => void
     unblock: (bvid: string) => void
 }
 
-// Custom storage with Set serialization
-const customStorage: StateStorage = {
-    getItem: (name) => {
-        const str = localStorage.getItem(name)
-        if (!str) return null
-        const data = JSON.parse(str)
-        if (data?.state?.blockedBvids?.values) {
-            data.state.blockedBvids = new Set(data.state.blockedBvids.values)
+// Migrate old storage format if needed
+if (typeof window !== 'undefined') {
+    try {
+        const stored = localStorage.getItem('blocked-videos')
+        if (stored) {
+            const data = JSON.parse(stored)
+            // Check for old Set format (empty object {} or object with values property)
+            if (data?.state?.blockedBvids && !Array.isArray(data.state.blockedBvids)) {
+                if (data.state.blockedBvids.values && Array.isArray(data.state.blockedBvids.values)) {
+                    // Migrate from { values: [...] } to [...]
+                    data.state.blockedBvids = data.state.blockedBvids.values
+                    localStorage.setItem('blocked-videos', JSON.stringify(data))
+                } else {
+                    // Corrupted data, reset
+                    localStorage.removeItem('blocked-videos')
+                }
+            }
         }
-        return JSON.stringify(data)
-    },
-    setItem: (name, value) => {
-        const data = JSON.parse(value)
-        if (data?.state?.blockedBvids instanceof Set) {
-            data.state.blockedBvids = { values: Array.from(data.state.blockedBvids) }
-        }
-        localStorage.setItem(name, JSON.stringify(data))
-    },
-    removeItem: (name) => localStorage.removeItem(name),
+    } catch {
+        // If parsing fails, remove corrupted data
+        localStorage.removeItem('blocked-videos')
+    }
 }
 
 export const useBlockedStore = create<BlockedStore>()(
     persist(
         (set, get) => ({
-            blockedBvids: new Set<string>(),
+            blockedBvids: [],
 
-            isBlocked: (bvid) => get().blockedBvids.has(bvid),
+            isBlocked: (bvid) => get().blockedBvids.includes(bvid),
 
             block: (bvid) => {
-                const newSet = new Set(get().blockedBvids)
-                newSet.add(bvid)
-                set({ blockedBvids: newSet })
+                const current = get().blockedBvids
+                if (!current.includes(bvid)) {
+                    set({ blockedBvids: [...current, bvid] })
+                }
             },
 
             unblock: (bvid) => {
-                const newSet = new Set(get().blockedBvids)
-                newSet.delete(bvid)
-                set({ blockedBvids: newSet })
+                set({ blockedBvids: get().blockedBvids.filter(b => b !== bvid) })
             },
         }),
         {
             name: 'blocked-videos',
-            storage: createJSONStorage(() => customStorage),
+            storage: createJSONStorage(() => localStorage),
         }
     )
 )

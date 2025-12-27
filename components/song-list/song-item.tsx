@@ -1,9 +1,9 @@
 'use client'
 
-import { Play, Pause, MoreHorizontal, Heart, ExternalLink, Trash2, ListEnd, TrendingUp, Eye, Calendar, Ban } from 'lucide-react'
+import { Play, Pause, MoreHorizontal, Heart, ExternalLink, Trash2, ListEnd, TrendingUp, Eye, Calendar, Ban, FolderPlus, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Song, usePlayerStore } from '@/lib/store/use-player-store'
-import { useFavoritesStore } from '@/lib/store/use-favorites-store'
+import { useFavoritesStore, DEFAULT_PLAYLIST_ID } from '@/lib/store/use-favorites-store'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
@@ -11,6 +11,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu'
 
 // Strip HTML tags and decode entities from Bilibili search results
@@ -67,7 +71,7 @@ export function SongItem({
   onBlock
 }: SongItemProps) {
   const { play, pause, currentSong, isPlaying, playNext } = usePlayerStore()
-  const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
+  const { isFavorite, addFavorite, removeFavorite, playlists, playlistSongs, addToPlaylist, removeFromPlaylist } = useFavoritesStore()
 
   const isCurrent = currentSong?.bvid === song.bvid
   const isFav = isFavorite(song.bvid)
@@ -299,6 +303,37 @@ export function SongItem({
             <Heart className={cn("w-4 h-4 mr-2", isFav && "fill-current text-red-500")} />
             {isFav ? '取消收藏' : '收藏'}
           </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <FolderPlus className="w-4 h-4 mr-2" />
+              添加到歌单
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                {playlists.map((playlist) => {
+                  const isIn = (playlistSongs[playlist.id] || []).includes(song.bvid)
+                  return (
+                    <DropdownMenuItem
+                      key={playlist.id}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (isIn) {
+                          removeFromPlaylist(song.bvid, playlist.id)
+                          toast.success(`已从「${playlist.name}」移除`)
+                        } else {
+                          addToPlaylist(song, playlist.id)
+                          toast.success(`已添加到「${playlist.name}」`)
+                        }
+                      }}
+                    >
+                      {isIn && <Check className="w-4 h-4 mr-2" />}
+                      <span className={cn(!isIn && "ml-6")}>{playlist.name}</span>
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
           <DropdownMenuItem onClick={(e) => {
             e.stopPropagation()
             window.open(`https://www.bilibili.com/video/${song.bvid}`, '_blank')

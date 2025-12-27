@@ -37,7 +37,7 @@ export async function GET() {
     if (imgKey && subKey) {
         try {
             const params = {
-                keyword: 'SUNO V5',
+                keyword: 'suno',
                 search_type: 'video',
                 page: 1,
                 order: 'click'

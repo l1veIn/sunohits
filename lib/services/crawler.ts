@@ -21,6 +21,9 @@ const CHART_CONFIGS: Record<ChartId, {
   stow: { order: 'stow', timeRange: '6m', maxPages: 5 },
 }
 
+// Search keywords to combine for broader coverage
+const SEARCH_KEYWORDS = ['suno', 'suno v5']
+
 // Time range to seconds mapping
 function getTimeRangeSeconds(range: TimeRange): number {
   switch (range) {
@@ -138,13 +141,44 @@ export class CrawlerService {
     order: OrderType,
     timeRange: TimeRange
   ) {
-    const results = await this.bili.search('SUNO V5', page, order, 1) // duration=1 means <10min
+    // Search multiple keywords and combine results
+    const allResults: any[] = []
+    const seenBvids = new Set<string>()
+
+    for (const keyword of SEARCH_KEYWORDS) {
+      try {
+        const searchResult = await this.bili.search(keyword, page, order, 1) // duration=1 means <10min
+
+        for (const item of searchResult.results) {
+          if (!seenBvids.has(item.bvid)) {
+            seenBvids.add(item.bvid)
+            allResults.push(item)
+          }
+        }
+
+        // Delay between keyword searches to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 500))
+      } catch (e: any) {
+        console.warn(`    Search for "${keyword}" failed:`, e.message)
+      }
+    }
+
+    // Sort by the relevant metric based on order type
+    allResults.sort((a, b) => {
+      switch (order) {
+        case 'click': return (b.play || 0) - (a.play || 0)
+        case 'pubdate': return (b.pubdate || 0) - (a.pubdate || 0)
+        case 'dm': return (b.danmaku || 0) - (a.danmaku || 0)
+        case 'stow': return (b.favorites || 0) - (a.favorites || 0)
+        default: return 0
+      }
+    })
 
     // Filter by time range
     const now = Math.floor(Date.now() / 1000)
     const cutoff = now - getTimeRangeSeconds(timeRange)
 
-    const filteredResults = results.filter((item: any) => {
+    const filteredResults = allResults.filter((item: any) => {
       const pubdate = item.pubdate || 0
       return pubdate >= cutoff
     })
@@ -172,6 +206,7 @@ export class CrawlerService {
       })
     }
 
+    console.log(`    Combined ${SEARCH_KEYWORDS.length} keywords: ${allResults.length} unique -> ${filteredResults.length} in time range`)
     return songs
   }
 
